@@ -8,7 +8,10 @@ const developmentSchema = new mongoose.Schema({
     unique: true,
     trim: true,
   },
-  slug: String,
+  slug: {
+    type: String,
+    unique: true,
+  },
   description: {
     type: String,
     required: [true, 'Please add a description'],
@@ -42,6 +45,16 @@ const developmentSchema = new mongoose.Schema({
   videoUrl: String,
   minPrice: Number,
   maxPrice: Number,
+  petFriendly: { type: Boolean, default: true },
+  furnished: { type: Boolean, default: true },
+  parking: { type: Boolean, default: false },
+  availableUnits: { type: Number, default: 0 },
+  operatorPackage: {
+    type: String,
+    enum: ['Essential', 'Premium', 'Elite'],
+    default: 'Premium'
+  },
+  completionDate: Date,
 }, {
   timestamps: true,
   toJSON: { virtuals: true },

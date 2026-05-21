@@ -29,11 +29,11 @@ const unitSchema = new mongoose.Schema({
   amenities: [String],
   images: [String],
   availableFrom: Date,
+  furnished: { type: Boolean, default: true },
   features: {
     petsAllowed: { type: Boolean, default: false },
     parking: { type: Boolean, default: false },
     balcony: { type: Boolean, default: false },
-    furnished: { type: Boolean, default: true },
   },
 }, {
   timestamps: true,
