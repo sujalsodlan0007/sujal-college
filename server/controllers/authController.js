@@ -1,0 +1,94 @@
+import User from '../models/User.js';
+import generateToken from '../utils/generateToken.js';
+import { sendWelcomeEmail } from '../services/emailService.js';
+
+// @desc    Register user
+// @route   POST /api/v1/auth/register
+export const register = async (req, res, next) => {
+  try {
+    const { name, email, password, role } = req.body;
+
+    const userExists = await User.findOne({ email });
+    if (userExists) {
+      return res.status(400).json({ success: false, message: 'User already exists' });
+    }
+
+    const user = await User.create({ name, email, password, role });
+
+    if (user) {
+      // Send welcome email
+      await sendWelcomeEmail(user);
+
+      res.status(201).json({
+        success: true,
+        data: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          token: generateToken(user._id),
+        },
+      });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Login user
+// @route   POST /api/v1/auth/login
+export const login = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email }).select('+password');
+    if (user && (await user.matchPassword(password))) {
+      res.json({
+        success: true,
+        data: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          token: generateToken(user._id),
+        },
+      });
+    } else {
+      res.status(401).json({ success: false, message: 'Invalid email or password' });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get current user profile
+// @route   GET /api/v1/auth/me
+export const getMe = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (user) {
+      res.json({ success: true, data: user });
+    } else {
+      res.status(404).json({ success: false, message: 'User not found' });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Update user preferences
+// @route   PUT /api/v1/auth/preferences
+export const updatePreferences = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id);
+    if (user) {
+      user.preferences = req.body;
+      await user.save();
+      res.json({ success: true, data: user });
+    } else {
+      res.status(404).json({ success: false, message: 'User not found' });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
